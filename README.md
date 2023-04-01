@@ -82,6 +82,12 @@ cd exchange-rates
 docker-compose up -d
 ```
 
+- At the first time, install composer dependecies
+
+```console
+docker-compose exec web sh
+```
+
 - Open your web browser and go to `http://localhost:8200` to see the application in action.
 
 ### Stop the application

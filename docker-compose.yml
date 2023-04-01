@@ -1,6 +1,6 @@
 version: '3.7'
 services:
-  web:
+  app:
     build: .
     ports:
       - "8200:80"
@@ -35,9 +35,11 @@ services:
       - cache:/data
   cron:
     build: .
-    command: docker/cron/cronjob.sh
+    command: ./docker/cron/cronjob.sh
     volumes:
       - .:/var/www/html
+    depends_on:
+      - app
 volumes:
   db-data:
   cache:
