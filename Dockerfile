@@ -9,32 +9,14 @@ RUN apt-get update && \
 
 RUN apt-get update && apt-get install -y cron
 RUN apt-get install -y systemd
-RUN systemctl enable cron
 
 RUN curl -sS https://getcomposer.org/installer | php -- \
---install-dir=/usr/bin --filename=composer && chmod +x /usr/bin/composer
+        --install-dir=/usr/bin --filename=composer && chmod +x /usr/bin/composer
 
 RUN alias composer='php /usr/bin/composer'
 
 RUN docker-php-ext-install pdo_mysql
 RUN pecl install redis && docker-php-ext-enable redis
-
-
-COPY composer.json composer.json
-COPY composer.lock composer.lock
-
-RUN composer install \
-    --no-interaction \
-    --no-plugins \
-    --no-scripts \
-    --no-dev \
-    --prefer-dist
-
-COPY . .
-
-RUN composer dump-autoload
-
-RUN composer install --no-dev --no-interaction -o
 
 COPY docker/app/apache.conf /etc/apache2/sites-available/000-default.conf
 

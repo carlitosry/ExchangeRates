@@ -62,7 +62,7 @@ cd exchange-rates
 
 - Create a `.env` file from the `.env.example` file:
 
-```console
+```bat
 cp .env.example .env
 ```
 
@@ -72,20 +72,20 @@ To start the application, follow these steps:
 
 - Navigate to the application directory:
 
-```console
+```bat
 cd exchange-rates
 ```
 
 - Build the container images and start the services:
 
-```console
+```bat
 docker-compose up -d
 ```
 
-- At the first time, install composer dependecies
+- Get composer dependencies trough app container
 
-```console
-docker-compose exec web sh
+```bat
+docker-compose exec app composer install
 ```
 
 - Open your web browser and go to `http://localhost:8200` to see the application in action.
@@ -94,6 +94,6 @@ docker-compose exec web sh
 
 To stop the application containers, run the following command in the application directory:
 
-```console
+```bat
 docker-compose down
 ```
