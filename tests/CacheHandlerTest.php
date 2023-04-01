@@ -2,7 +2,7 @@
 
 namespace App\Tests;
 
-use App\Service\Cache\CacheHandler;
+use App\Service\Handler\CacheHandler;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Cache\Adapter\RedisAdapter;
 use Symfony\Contracts\Cache\ItemInterface;
