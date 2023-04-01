@@ -1,0 +1,44 @@
+version: '3.7'
+services:
+  web:
+    build: .
+    ports:
+      - "8200:80"
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - .:/var/www/html
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    links:
+      - redis
+  db:
+    image: mysql:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: symfony
+      MYSQL_USER: symfony
+      MYSQL_PASSWORD: symfony
+    ports:
+      - "3333:3306"
+    volumes:
+      - db-data:/var/lib/mysql
+  redis:
+    image: redis:6.2-alpine
+    restart: always
+    ports:
+      - '6379:6379'
+    command: redis-server --save 20 1 --loglevel warning
+    volumes: 
+      - cache:/data
+  cron:
+    build: .
+    command: docker/cron/cronjob.sh
+    volumes:
+      - .:/var/www/html
+volumes:
+  db-data:
+  cache:
+    driver: local
