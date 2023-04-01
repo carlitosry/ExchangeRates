@@ -5,8 +5,9 @@ namespace App\Tests;
 use App\Command\ExchangeRatesCommand;
 use App\Model\RatesResponse;
 use App\Repository\ExchangeRateRepository;
-use App\Service\Cache\CacheHandler;
+use App\Service\Handler\CacheHandler;
 use App\Service\Provider\RatesProvider;
+use App\Service\Validator\CurrencyValidator;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
@@ -14,7 +15,6 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\BufferedOutput;
 use Symfony\Component\Console\Tester\CommandTester;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 
 class ExchangeRatesCommandTest extends KernelTestCase
@@ -31,7 +31,7 @@ class ExchangeRatesCommandTest extends KernelTestCase
         $this->entityManager = $this->createMock(EntityManagerInterface::class);
         $this->ratesProvider = $this->createMock(RatesProvider::class);
         $this->cache = $this->createMock(CacheHandler::class);
-        $this->validator = $this->createMock(ValidatorInterface::class);
+        $this->validator = $this->createMock(CurrencyValidator::class);
 
         $this->command = new ExchangeRatesCommand(
             $this->ratesProvider,
@@ -117,7 +117,7 @@ class ExchangeRatesCommandTest extends KernelTestCase
 
         $this->cache->expects($this->once())
             ->method('setItem')
-            ->with(ExchangeRatesCommand::RATES_CACHE, $ratesArray);
+            ->with(CacheHandler::RATES_CACHE, $ratesArray);
 
         // Act
         $this->command->run($input, $output);

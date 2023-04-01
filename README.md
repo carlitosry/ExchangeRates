@@ -91,6 +91,12 @@ docker-compose up -d
 docker-compose exec app composer install
 ```
 
+- You should execute the migrations to update the database schema
+
+```bat
+docker-compose exec app php bin/console doc:mig:mig
+```
+
 - Open your web browser and go to `http://localhost:8200` to see the application in action.
 
 ### Stop the application
