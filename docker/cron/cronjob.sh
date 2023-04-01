@@ -1,1 +1,0 @@
-"echo '* * * * * touch /var/www/html/var/log/cron.log && /usr/local/bin/php /var/www/html/bin/console app:exchange:rates EUR >> /var/www/html/var/log/cron.log 2>&1' | crontab - && cron -f"
