@@ -9,6 +9,7 @@ RUN apt-get update && \
 
 RUN apt-get update && apt-get install -y cron
 RUN apt-get install -y systemd
+RUN systemctl enable cron
 
 RUN curl -sS https://getcomposer.org/installer | php -- \
         --install-dir=/usr/bin --filename=composer && chmod +x /usr/bin/composer
