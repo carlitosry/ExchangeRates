@@ -65,7 +65,7 @@ class RatesProvider
             $currenciesByRates = array_keys($ratesFromCache->getRates());
             $availableRates = array_intersect($currenciesToCalculate, $currenciesByRates);
 
-            if (count($availableRates) === count($currenciesToCalculate)){
+            if (count($availableRates) === count($currenciesToCalculate)) {
                 return $ratesFromCache;
             }
         }

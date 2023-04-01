@@ -22,3 +22,15 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+
+
+    ## guzzle http client
+    guzzle.client:
+        class: GuzzleHttp\Client
+        arguments:
+            -
+                'base_uri': '%env(API_EXCHANGE_RATES)%'
+
+    App\Service\Provider\RatesProvider:
+        arguments:
+            - '@guzzle.client'
