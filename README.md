@@ -11,14 +11,17 @@ The task is to build a currency exchange rate API that will save a set of curren
 
 - Create a console command that will fetch the currency exchange rates for a given set of currencies from the Open Exchange Rates API. The command should have the following signature:
 
-  `php bin/console app:currency:rates [base_currency] [target_currency_1] [target_currency_2] ... [target_currency_n]`
+  ```
+    php bin/console app:currency:rates [base_currency] [target_currency_1] [target_currency_2] ... [target_currency_n]
+  ```
 
   The command should make an HTTP request to the API to fetch the exchange rates for the given currencies, save the rates into a MySQL Database with the EUR base currency and store the rates in Redis. This must be set as a cron job to be triggered daily at 1am.
 
 - Create an endpoint that will return the exchange rates for a given set of currencies. The endpoint should have the following signature:
 
-  `GET /api/exchange-rates?base_currency=[base_currency]&target_currencies=[target_currency_1,target_currency_2,...,target_currency_n]`
-
+```
+  GET /api/exchange-rates?base_currency=[base_currency]&target_currencies=[target_currency_1,target_currency_2,...,target_currency_n]
+```
   The endpoint should first check Redis for the requested rates. If the rates are not in Redis, it should fetch them from the MySQL Database, store them in Redis and return the rates. If the rates are in Redis, it should return the rates directly from Redis.
 
 - Write unit tests to verify the functionality of the console command and the endpoint.
@@ -62,7 +65,7 @@ cd exchange-rates
 
 - Create a `.env` file from the `.env.example` file:
 
-```console
+```bat
 cp .env.example .env
 ```
 
@@ -72,19 +75,19 @@ To start the application, follow these steps:
 
 - Navigate to the application directory:
 
-```console
+```bat
 cd exchange-rates
 ```
 
 - Build the container images and start the services:
 
-```console
+```bat
 docker-compose up -d
 ```
 
 - At the first time, install composer dependecies
 
-```console
+```bat
 docker-compose exec web sh
 ```
 
@@ -94,6 +97,6 @@ docker-compose exec web sh
 
 To stop the application containers, run the following command in the application directory:
 
-```console
+```bat
 docker-compose down
 ```
