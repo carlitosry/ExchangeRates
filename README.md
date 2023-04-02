@@ -124,34 +124,46 @@ docker-compose down
 
 ## Usage information
 
-The Symfony application is an API that consumes a third-party API to obtain currency exchange rate information. This application runs in four Docker containers, which include the MySQL database, Redis, the Apache web server, and a cron container that executes the command that retrieves the currency exchange rates from the third-party API.
+This Symfony application is an API that consumes a third-party API to obtain currency exchange rate information. This application runs in four Docker containers, which include the **MySQL** database, **Redis**, the **Apache** web server, and a **cron** container that executes the command that retrieves the currency exchange rates from the third-party API.
 
-The command runs automatically once a day at 1am and stores the results in both the MySQL database and Redis. The application also has a public API that allows users to obtain currency exchange rates for a given set of currencies.
-this cron is configured on the following file:
-```
+Once up the docker's containers, the Cron container executed a command automatically once a day at 1am and stores the results in both the container MySQL database and Redis. The application also has a public API that allows users to obtain currency exchange rates for a given set of currencies.
+
+**NOTE**: the cron is configured on the following file:
+
+```shell
 docker/cron/crontab
 ```
 
-##Command to Fetch Initial Exchange Rates Data
+### Command to Fetch Initial Exchange Rates Data
 To obtain the initial exchange rates data from the third-party API, you can use the following command:
-```bat 
- docker-compose exec app php bin/console app:exchange:rates EUR 
+
+```shell 
+ docker-compose exec app php bin/console app:exchange:rates [base_currency] [target_currency_1] [target_currency_2] [target_currency_3] ... [target_currency_n] 
 ```
-where the first argument is the base to get exchanges and this is required.
-the following argument would be the currencies rates that we want to save in our application, by default these following arguments are not required, is this is not provider, we get through the third-party API all rates available in its.
-In the cron file `docker/cron/crontab` this is the setting by default.
+
+The first argument **`[base_currency]`** is the base currency used to retrieve exchange rates. This argument is required. 
+The following arguments **`[target_currency_1] ... [target_currency_n]`** specify the currencies for which to retrieve exchange rates.This argument is optional. If not provided, the command retrieves all available exchange rates from the third-party API.
+
+By default, the **`docker/cron/crontab`** file is configured to run this command once a day at 1am to fetch the latest exchange rates and store them in both the **`MySQL`** database and **`Redis`**. 
+You can modify the cron schedule or the command to retrieve different exchange rates.
+
+This is an example about the command runnig once is up the application
+
+```shell 
+ docker-compose exec app php bin/console app:exchange:rates EUR
+```
+
+**NOTE**: the application validated that the arguments introduce in a command are a currency valid using the service **`src/Service/Validator/CurrencyValidator.php`** and this is reusing in the API endpoint 
+
 
 ### Api endpoint
-
-The application has been developed using the Symfony 5 framework and makes use of various Symfony components, such as Doctrine for database management and GuzzleHTTP for making HTTP requests to the third-party API. Unit tests have also been written to ensure the functionality of both the command and the API.
-once running the app, locally you could access to the endpoint through the following url: 
+The application is a currency exchange rate API solution that provides users with up-to-date exchange rates between various currencies. The application uses the Doctrine component for database management and GuzzleHTTP for making HTTP requests to a third-party API. The API endpoint can be accessed via the following URL:
 
 ```
 http://localhost:8200/api/exchange-rates?base_currency=EUR&target_currencies=USD,COP,BTC
 ```
 
-This endpoint has two parameter, the first one is required, but the second one is optional, this means that if you not set the target currencies the app fetch all of available currencies.
-we would get the following result
+The API endpoint supports two parameters **`base_currency`** and **`target_currencies`**, where the base currency is mandatory, and the target currencies are optional. If the target currencies are not specified, the API will return all available currencies fetched from the database. The response from the API contains the base currency and its corresponding exchange rate with the target currencies in JSON format.
 
 ```json
 {
@@ -181,6 +193,7 @@ the result would be all the targets saved in database, this means that the excha
   "BTC": 0.0000014321132492243673,
   "EUR": 0.03761408623318536,
     ...
+  "N_CURRENCIES": "RATE"
   }
 }
 ```
