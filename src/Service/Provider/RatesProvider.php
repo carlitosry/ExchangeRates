@@ -8,6 +8,9 @@ use App\Service\Handler\CacheHandler;
 use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
+use Symfony\Component\Serializer\Encoder\JsonEncoder;
+use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
+use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\Serializer\SerializerInterface;
 
 /**
@@ -26,13 +29,14 @@ class RatesProvider
 
     public function __construct(
         Client $client,
-        SerializerProvider $serializer,
         CacheHandler $cache,
         ExchangeRateRepository $exchangeRateRepository
     )
     {
         $this->client = $client;
-        $this->serializer = $serializer->create();
+        $encoders = [new JsonEncoder()];
+        $normalizers = [new ObjectNormalizer()];
+        $this->serializer = new Serializer($normalizers, $encoders);
         $this->cache = $cache;
         $this->exchangeRateRepository = $exchangeRateRepository;
     }
@@ -53,43 +57,28 @@ class RatesProvider
             throw new Exception('The response status code is not valid');
         }
 
-        return $this->ratesDeserialize($response->getBody()->getContents());
+        return $this->serializer->deserialize($response->getBody()->getContents(), RatesResponse::class, 'json');
     }
 
-    public function fetchRatesFromDatabase(string $base, array $targetCurrencies)
+    public function fetchRatesFromDatabase(string $baseCurrency, array $targetCurrencies) : array
     {
-        $ratesFromCache = $this->cache->getItem(CacheHandler::RATES_CACHE);
-        $currenciesToCalculate = array_merge([$base], $targetCurrencies);
+        $currenciesToCalculate = array_merge([$baseCurrency], $targetCurrencies);
+        $currenciesInCache = $this->cache->getItem(CacheHandler::CACHE_BASE_CURRENCY_KEY_PREFIX.$baseCurrency) ?: [];
 
-        if ($ratesFromCache instanceof RatesResponse) {
-            $currenciesByRates = array_keys($ratesFromCache->getRates());
-            $availableRates = array_intersect($currenciesToCalculate, $currenciesByRates);
-
-            if (count($availableRates) === count($currenciesToCalculate)) {
-                return $ratesFromCache;
-            }
+        if(!empty($currenciesInCache) && !empty($targetCurrencies) && count(array_diff($targetCurrencies, $currenciesInCache)) == 0){
+            $ratesInCache = $this->cache->getItem(CacheHandler::CACHE_RATES_CURRENCY_KEY_PREFIX.$baseCurrency);
+            return array_intersect_key($ratesInCache, array_flip($currenciesToCalculate));
         }
 
-        $rates = $this->exchangeRateRepository->findBy(
-            [
-                "targetCurrency" => $currenciesToCalculate,
-                "baseCurrency" => self::BASE_CURRENCY
-            ]
-        );
-        $ratesArray = [];
+        $rates = $this->exchangeRateRepository->findRatesByBaseAndTargetCurrencies(self::BASE_CURRENCY,$currenciesToCalculate);
+
+        $resultArray = array();
         foreach ($rates as $rate) {
-            $ratesArray[$rate->getTargetCurrency()] = $rate->getRate();
+            $resultArray[$rate['targetCurrency']] = $rate['rate'];
         }
-        $parsedRates = new RatesResponse();
-        $parsedRates->setBase(self::BASE_CURRENCY);
-        $parsedRates->setRates($ratesArray);
 
-        return $parsedRates;
+        $this->cache->updateCurrencyCacheItems($baseCurrency, $resultArray);
 
-    }
-
-    private function ratesDeserialize($jsonResponse) : RatesResponse
-    {
-        return $this->serializer->deserialize($jsonResponse, RatesResponse::class, 'json');
+        return $resultArray;
     }
 }

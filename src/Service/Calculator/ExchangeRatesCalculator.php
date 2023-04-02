@@ -16,17 +16,22 @@ use Symfony\Contracts\Cache\CacheInterface;
  */
 class ExchangeRatesCalculator
 {
-    public function calculateRates(string $baseCurrency, array $targetCurrencies, RatesResponse $ratesResponse): ?array
+    public function calculateRates(string $baseCurrency, array $targetCurrencies, array $rates): ?array
     {
-        if (!isset($ratesResponse->getRates()[$baseCurrency])) {
+
+        if(!isset($rates[$baseCurrency])){
             return null;
         }
 
+        if(empty($targetCurrencies)){
+            $targetCurrencies = array_keys($rates);
+        }
+
         $ratesResult = [];
-        $rates = $ratesResponse->getRates();
         foreach ($targetCurrencies as $targetCurrency) {
             $ratesResult[$targetCurrency] = $rates[$targetCurrency] / $rates[$baseCurrency];
         }
+
 
         return $ratesResult;
     }

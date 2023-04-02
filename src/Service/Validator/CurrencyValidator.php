@@ -3,6 +3,8 @@
 
 namespace App\Service\Validator;
 
+use App\Service\Cache\CacheHandler;
+use CurrencyValidationException;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;

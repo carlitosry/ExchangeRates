@@ -17,6 +17,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Doctrine\ORM\EntityManagerInterface;
 
+
 class ExchangeRatesCommand extends Command
 {
     const BASE_CURRENCY = 'base_currency';
@@ -84,15 +85,14 @@ class ExchangeRatesCommand extends Command
             );
 
             if (!$ratesResponse->getSuccess()) {
-                throw new LogicException('The provider respose has not been successfully');
+                throw new LogicException('The provider response has not been successfully');
             }
 
             /** @var ExchangeRateRepository $exchangeRateRepository */
             $exchangeRateRepository = $this->entityManager->getRepository(ExchangeRate::class);
 
             $exchangeRateRepository->updateRates($baseCurrency, $ratesResponse->getRates());
-            $this->cache->setItem(CacheHandler::RATES_CACHE, $ratesResponse);
-
+            $this->cache->updateCurrencyCacheItems($baseCurrency, $ratesResponse->getRates());
 
         } catch (GuzzleException|InvalidArgumentException|LogicException|CurrencyValidationException $e) {
             $output->writeln(

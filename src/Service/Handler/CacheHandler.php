@@ -2,6 +2,7 @@
 
 namespace App\Service\Handler;
 
+use Psr\Cache\InvalidArgumentException;
 use Symfony\Contracts\Cache\CacheInterface;
 
 /**
@@ -13,7 +14,8 @@ use Symfony\Contracts\Cache\CacheInterface;
  */
 class CacheHandler
 {
-    const RATES_CACHE = 'rates_from_api_cache_key';
+    const CACHE_BASE_CURRENCY_KEY_PREFIX = 'BASE_';
+    const CACHE_RATES_CURRENCY_KEY_PREFIX = 'RATES_';
     private CacheInterface $cache;
 
     public function __construct(
@@ -54,5 +56,18 @@ class CacheHandler
         }
 
         return $cacheItem->get();
+    }
+
+    /**
+     * @param string $baseCurrency
+     * @param array $exchangeRates
+     * @return void
+     */
+    public function updateCurrencyCacheItems(string $baseCurrency, array $exchangeRates): void
+    {
+        $cacheCurrencies = $this->getItem(CacheHandler::CACHE_BASE_CURRENCY_KEY_PREFIX.$baseCurrency) ?: [];
+        $cacheRates = $this->getItem(CacheHandler::CACHE_RATES_CURRENCY_KEY_PREFIX.$baseCurrency) ?: [];
+        $this->setItem(CacheHandler::CACHE_BASE_CURRENCY_KEY_PREFIX.$baseCurrency, $cacheCurrencies + array_keys($exchangeRates));
+        $this->setItem(CacheHandler::CACHE_RATES_CURRENCY_KEY_PREFIX.$baseCurrency, $cacheRates + $exchangeRates);
     }
 }

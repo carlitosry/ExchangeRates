@@ -152,6 +152,25 @@ we would get the following result:
 }
 ```
 
+Further, you could fetch form api without the target_currencies filter
+```
+http://localhost:8200/api/exchange-rates?base_currency=EUR
+```
 
+the result would be all the targets saved in database
+
+
+```json
+{
+"base_currency": "VES",
+"target_currencies": {
+  "USD": 0.0409175214064105,
+  "COP": 189.83428763904593,
+  "BTC": 0.0000014321132492243673,
+  "EUR": 0.03761408623318536,
+    ...
+  }
+}
+```
 In summary, the Symfony application is a currency exchange rate API solution that runs in Docker containers and uses a command to consume a third-party API and store the results in the database and Redis. The application also offers a public API for users to query currency exchange rates.
 
