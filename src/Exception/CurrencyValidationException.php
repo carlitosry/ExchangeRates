@@ -3,6 +3,7 @@
 namespace App\Exception;
 
 use InvalidArgumentException;
+use Throwable;
 
 /**
  * Exception that is thrown when an array of currencies fails validation.
