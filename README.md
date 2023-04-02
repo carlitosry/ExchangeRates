@@ -2,6 +2,21 @@
 
 The task is to build a currency exchange rate API that will save a set of currency rate amounts with the EUR base currency into a MySQL Database and includes redis cache not to trigger third party api nor the database all the time a request is triggered. The following requirements must be met:
 
+# Content
+
+- [Project Overview](#project-overview)
+  * [Content](#content)
+  * [Requirements](#requirements)
+  * [Evaluation Criteria](#evaluation-criteria)
+  * [Getting Started](#getting-started)
+    + [Prerequisites](#prerequisites)
+    + [Clone the repository](#clone-the-repository)
+    + [Configure the environment](#configure-the-environment)
+    + [Start the application](#start-the-application)
+    + [Stop the application](#stop-the-application)
+  * [Usage cases](#usage-cases)
+
+
 ## Requirements
 
 - Build a Symfony 5 project with the following dependencies:
@@ -106,3 +121,37 @@ To stop the application containers, run the following command in the application
 ```bat
 docker-compose down
 ```
+
+## Usage information
+
+The Symfony application is an API that consumes a third-party API to obtain currency exchange rate information. This application runs in four Docker containers, which include the MySQL database, Redis, the Apache web server, and a cron container that executes the command that retrieves the currency exchange rates from the third-party API.
+
+The command runs automatically once a day at 1am and stores the results in both the MySQL database and Redis. The application also has a public API that allows users to obtain currency exchange rates for a given set of currencies.
+this cron is configured on the following file:
+```
+docker/cron/crontab
+```
+
+The application has been developed using the Symfony 5 framework and makes use of various Symfony components, such as Doctrine for database management and GuzzleHTTP for making HTTP requests to the third-party API. Unit tests have also been written to ensure the functionality of both the command and the API.
+once running the app, locally you could access to the endpoint through the following url: 
+```
+http://localhost:8200/api/exchange-rates?base_currency=EUR&target_currencies=USD,COP,BTC
+```
+
+This endpoint has two parameter, the first one is required, but the second one is optional, this means that if you not set the target currencies the app fetch all of available currencies.
+we would get the following result:
+```json
+{
+  "base_currency": "VES",
+  "target_currencies": {
+    "USD": 0.0409175214064105,
+    "COP": 189.83428763904593,
+    "BTC": 0.0000014321132492243673,
+    "EUR": 0.03761408623318536
+  }
+}
+```
+
+
+In summary, the Symfony application is a currency exchange rate API solution that runs in Docker containers and uses a command to consume a third-party API and store the results in the database and Redis. The application also offers a public API for users to query currency exchange rates.
+
