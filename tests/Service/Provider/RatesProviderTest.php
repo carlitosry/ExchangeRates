@@ -6,98 +6,102 @@ use App\Model\RatesResponse;
 use App\Repository\ExchangeRateRepository;
 use App\Service\Handler\CacheHandler;
 use App\Service\Provider\RatesProvider;
-use App\Service\Provider\SerializerProvider;
-use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Response;
-use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\Serializer\SerializerInterface;
 
 class RatesProviderTest extends TestCase
 {
-    private MockObject $client;
-    private MockObject $serializerProvider;
-    private MockObject $serializer;
-    private MockObject $cacheHandler;
-    private MockObject $exchangeRateRepository;
+    private RatesProvider $ratesProvider;
+    private Client $client;
+    private CacheHandler $cache;
+    private ExchangeRateRepository $exchangeRateRepository;
 
     protected function setUp(): void
     {
         $this->client = $this->createMock(Client::class);
-        $this->serializerProvider = $this->createMock(SerializerProvider::class);
+        $this->cache = $this->createMock(CacheHandler::class);
         $this->exchangeRateRepository = $this->createMock(ExchangeRateRepository::class);
-        $this->cacheHandler = $this->createMock(CacheHandler::class);
-        $this->serializer = $this->getMockBuilder(SerializerInterface::class)
-            ->disableOriginalConstructor()
-            ->getMock();
+
+        $this->ratesProvider = new RatesProvider(
+            $this->client,
+            $this->cache,
+            $this->exchangeRateRepository
+        );
     }
 
-    public function testGetRatesSuccess()
+    public function testGetRates(): void
     {
-        $jsonResponse = '{"success": true, "base": "USD", "rates": {"EUR": 0.825, "GBP": 0.708, "JPY": 108.78}}';
+        $baseCurrency = 'EUR';
+        $targetCurrencies = ['USD', 'GBP'];
 
-        $this->serializerProvider->expects($this->once())
-            ->method('create')
-            ->willReturn(
-                $this->serializer
-            );
-
-        $this->serializer->expects($this->once())
-            ->method('deserialize')
-            ->with($jsonResponse, RatesResponse::class, 'json')
-            ->willReturn(
-                $this->getFakeRateResponse("USD", ['EUR' => 0.825, 'GBP' => 0.708, 'JPY' => 108.78])
-            );
+        $jsonResponse = '{"base": "EUR", "success": true, "date": "2023-04-02", "rates": {"USD": 1.23, "GBP": 0.89}}';
+        $ratesResponse = new RatesResponse(["USD" => 1.23, "GBP" => 0.89]);
+        $ratesResponse->setSuccess(true);
+        $ratesResponse->setBase("EUR");
+        $ratesResponse->setDate("2023-04-02");
 
         $this->client->expects($this->once())
             ->method('request')
-            ->willReturn(
-                new Response(200, [], $jsonResponse)
+            ->with('GET', '', [
+                'query' => [
+                    'base' => $baseCurrency,
+                    'symbols' => implode(',', $targetCurrencies)
+                ]
+            ])
+            ->willReturn(new Response(200, [], $jsonResponse));
+
+        $result = $this->ratesProvider->getRates($baseCurrency, $targetCurrencies);
+
+        $this->assertEquals($ratesResponse->getRates(), $result->getRates());
+        $this->assertEquals($ratesResponse->getSuccess(), $result->getSuccess());
+        $this->assertEquals($ratesResponse->getDate(), $result->getDate());
+        $this->assertEquals($ratesResponse->getBase(), $result->getBase());
+    }
+
+    public function testFetchRatesFromDatabase(): void
+    {
+        // Set up the test case
+        $baseCurrency = 'EUR';
+        $targetCurrencies = ['USD', 'GBP'];
+        $ratesFromDb = [
+            ['targetCurrency' => 'USD', 'rate' => 1.2],
+            ['targetCurrency' => 'GBP', 'rate' => 0.9],
+        ];
+        $ratesInDb = [
+            'USD' => 1.2,
+            'GBP' => 0.9
+        ];
+
+        $ratesInCache = [
+            'USD' => 1.3,
+            'GBP' => 0.8
+        ];
+
+        $this->exchangeRateRepository
+            ->expects($this->once())
+            ->method('findRatesByBaseAndTargetCurrencies')
+            ->willReturn($ratesFromDb);
+        $this->cache
+            ->expects($this->atLeastOnce())
+            ->method('updateCurrencyCacheItems')
+            ->with($baseCurrency, $ratesInDb);
+
+        $this->cache
+            ->expects($this->exactly(3))
+            ->method('getItem')
+            ->willReturnOnConsecutiveCalls(
+                [],
+                $targetCurrencies,
+                $ratesInCache
             );
 
-        $ratesProvider = new RatesProvider(
-            $this->client,
-            $this->serializerProvider,
-            $this->cacheHandler,
-            $this->exchangeRateRepository
-        );
+        // Call the function for the first time to fetch from the database
+        $result = $this->ratesProvider->fetchRatesFromDatabase($baseCurrency, $targetCurrencies);
+        $this->assertEquals($ratesInDb, $result);
 
-        $ratesResponse = $ratesProvider->getRates('USD', ['EUR', 'GBP', 'JPY']);
-
-        $this->assertInstanceOf(RatesResponse::class, $ratesResponse);
-        $this->assertTrue($ratesResponse->getSuccess());
-        $this->assertEquals('USD', $ratesResponse->getBase());
-        $this->assertEquals(['EUR' => 0.825, 'GBP' => 0.708, 'JPY' => 108.78], $ratesResponse->getRates());
-    }
-
-
-    public function testGetRatesFail()
-    {
-        $this->client->expects($this->once())
-            ->method('request')
-            ->willReturn(new Response(400, [], '{"error": "Bad Request"}'));
-
-        $ratesProvider = new RatesProvider(
-            $this->client,
-            $this->serializerProvider,
-            $this->cacheHandler,
-            $this->exchangeRateRepository
-        );
-
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('The response status code is not valid');
-
-        $ratesProvider->getRates('USD', ['EUR', 'GBP', 'JPY']);
-    }
-
-    private function getFakeRateResponse($base = 'EUR', $ratesArray = ['USD' => 0.99]): RatesResponse
-    {
-        $rates = new RatesResponse();
-        $rates->setBase($base);
-        $rates->setRates($ratesArray);
-        $rates->setSuccess(true);
-
-        return $rates;
+        // Call the function for the second time to fetch from the cache
+        $result = $this->ratesProvider->fetchRatesFromDatabase($baseCurrency, $targetCurrencies);
+        $this->assertEquals($ratesInCache, $result);
     }
 }

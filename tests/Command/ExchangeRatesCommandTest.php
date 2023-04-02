@@ -65,8 +65,11 @@ class ExchangeRatesCommandTest extends KernelTestCase
     public function testExecuteWithInvalidBaseCurrency(): void
     {
         // Arrange
-        $this->validator->method('validate')
-            ->willReturn([0]);
+        $this->validator->method('validateCurrencies')
+            ->willReturn([
+                'hasError' => true,
+                'message' => ''
+            ]);
 
         // ACT
         $this->commandTester->execute([
@@ -76,7 +79,7 @@ class ExchangeRatesCommandTest extends KernelTestCase
 
         // Assert
         $this->assertStringContainsString(
-            "Argument 'INVALID' is not valid",
+            "rates could not fetch",
             $this->commandTester->getDisplay()
         );
 
@@ -94,9 +97,11 @@ class ExchangeRatesCommandTest extends KernelTestCase
 
         $ratesArray = ['EUR' => 1.234, 'GBP' => 1.567];
 
-        $this->validator
-            ->method('validate')
-            ->willReturn([]);
+        $this->validator->method('validateCurrencies')
+            ->willReturn([
+                'hasError' => false,
+                'message' => ''
+            ]);
 
         $apiResponse = $this->getFakeRateResponse();
         $apiResponse->setRates($ratesArray);
@@ -116,15 +121,15 @@ class ExchangeRatesCommandTest extends KernelTestCase
             ->willReturn($repository);
 
         $this->cache->expects($this->once())
-            ->method('setItem')
-            ->with(CacheHandler::RATES_CACHE, $ratesArray);
+            ->method('updateCurrencyCacheItems')
+            ->with('USD', $ratesArray);
 
         // Act
         $this->command->run($input, $output);
 
         // Assert
         $this->assertStringContainsString(
-            "Exchange rates fetched and processed successfully!!",
+            "rates fetched and processed successfully!",
             $output->fetch()
         );
     }
@@ -138,9 +143,11 @@ class ExchangeRatesCommandTest extends KernelTestCase
         ]);
         $output = new BufferedOutput();
 
-        $this->validator
-            ->method('validate')
-            ->willReturn([]);
+        $this->validator->method('validateCurrencies')
+            ->willReturn([
+                'hasError' => false,
+                'message' => ''
+            ]);
 
         $apiResponse = $this->getFakeRateResponse();
         $apiResponse->setSuccess(false);
@@ -154,7 +161,7 @@ class ExchangeRatesCommandTest extends KernelTestCase
 
         // Assert
         $this->assertStringContainsString(
-            "The provider has not been successfully",
+            "The provider response has not been successfully",
             $output->fetch()
         );
 

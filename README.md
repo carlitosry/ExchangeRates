@@ -132,14 +132,27 @@ this cron is configured on the following file:
 docker/cron/crontab
 ```
 
+##Command to Fetch Initial Exchange Rates Data
+To obtain the initial exchange rates data from the third-party API, you can use the following command:
+```bat 
+ docker-compose exec app php bin/console app:exchange:rates EUR 
+```
+where the first argument is the base to get exchanges and this is required.
+the following argument would be the currencies rates that we want to save in our application, by default these following arguments are not required, is this is not provider, we get through the third-party API all rates available in its.
+In the cron file `docker/cron/crontab` this is the setting by default.
+
+### Api endpoint
+
 The application has been developed using the Symfony 5 framework and makes use of various Symfony components, such as Doctrine for database management and GuzzleHTTP for making HTTP requests to the third-party API. Unit tests have also been written to ensure the functionality of both the command and the API.
 once running the app, locally you could access to the endpoint through the following url: 
+
 ```
 http://localhost:8200/api/exchange-rates?base_currency=EUR&target_currencies=USD,COP,BTC
 ```
 
 This endpoint has two parameter, the first one is required, but the second one is optional, this means that if you not set the target currencies the app fetch all of available currencies.
-we would get the following result:
+we would get the following result
+
 ```json
 {
   "base_currency": "VES",
@@ -157,8 +170,7 @@ Further, you could fetch form api without the target_currencies filter
 http://localhost:8200/api/exchange-rates?base_currency=EUR
 ```
 
-the result would be all the targets saved in database
-
+the result would be all the targets saved in database, this means that the exchange available just depend on the target saves in database when the command was execute.
 
 ```json
 {
@@ -172,5 +184,12 @@ the result would be all the targets saved in database
   }
 }
 ```
+
 In summary, the Symfony application is a currency exchange rate API solution that runs in Docker containers and uses a command to consume a third-party API and store the results in the database and Redis. The application also offers a public API for users to query currency exchange rates.
 
+### Test Unit
+To execute the testing about the functionality you should to run the following command:
+
+```bat
+docker-compose exec app php bin/phpunit --debug tests/
+```
