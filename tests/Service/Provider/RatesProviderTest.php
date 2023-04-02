@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Tests;
+namespace App\Tests\Service\Provider;
 
+use App\Model\RatesResponse;
 use App\Repository\ExchangeRateRepository;
 use App\Service\Handler\CacheHandler;
 use App\Service\Provider\RatesProvider;
-use App\Model\RatesResponse;
 use App\Service\Provider\SerializerProvider;
 use Exception;
 use GuzzleHttp\Client;
@@ -25,9 +25,9 @@ class RatesProviderTest extends TestCase
     protected function setUp(): void
     {
         $this->client = $this->createMock(Client::class);
-        $this->cacheHandler = $this->createMock(CacheHandler::class);
         $this->serializerProvider = $this->createMock(SerializerProvider::class);
         $this->exchangeRateRepository = $this->createMock(ExchangeRateRepository::class);
+        $this->cacheHandler = $this->createMock(CacheHandler::class);
         $this->serializer = $this->getMockBuilder(SerializerInterface::class)
             ->disableOriginalConstructor()
             ->getMock();

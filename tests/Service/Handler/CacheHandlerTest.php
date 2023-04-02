@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Tests;
+namespace App\Tests\Service\Handler;
 
 use App\Service\Handler\CacheHandler;
 use PHPUnit\Framework\TestCase;
