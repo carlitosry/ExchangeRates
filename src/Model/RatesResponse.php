@@ -10,6 +10,14 @@ class RatesResponse
     private string $date;
 
     /**
+     * @param array $rates
+     */
+    public function __construct(array $rates = [])
+    {
+        $this->setRates($rates);
+    }
+
+    /**
      * @return mixed
      */
     public function getRates()
@@ -18,9 +26,9 @@ class RatesResponse
     }
 
     /**
-     * @param mixed $rates
+     * @param array $rates
      */
-    public function setRates($rates): void
+    public function setRates(array $rates): void
     {
         $this->rates = $rates;
     }
