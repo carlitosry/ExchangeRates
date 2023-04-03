@@ -13,15 +13,16 @@ Content
     * [Prerequisites](#prerequisites)
     * [Installation](#installation)
     * [Usage](#usage)
-       *   [Fetch Exchange Rates Command](#fetch-exchange-rates-command)
-       *   [Exchange Rates Endpoint](#exchange-rates-endpoint)
+        *   [Fetching Exchange Rates](#fetching-exchange-rates)
+        *   [Exchange Rates Endpoint](#exchange-rates-endpoint)
 *   [API Reference](#api-reference)
     *   [Endpoints](#endpoints)
     *   [Requests](#requests)
-        *   [Fetch Exchange Rates Request](#fetch-exchange-rates-request)
+        *   [Exchange Rates Request](#exchange-rates-request)
     *   [Responses](#responses)
-        *   [Fetch Exchange Rates Response](#fetch-exchange-rates-response)
+        *   [Exchange Rates Response](#exchange-rates-response)
 *   [Testing](#testing)
+
 
 * * *
 
@@ -29,9 +30,10 @@ Requirements
 ------------
 
 *   Build a Symfony 5 project with the following dependencies:
-    +   Doctrine (with migrations)
-    +   Redis
-    +   GuzzleHTTP (for making HTTP requests)
+
+*   Doctrine (with migrations)
+*   Redis
+*   GuzzleHTTP (for making HTTP requests)
 *   Create a console command that will fetch the currency exchange rates for a given set of currencies from the Open Exchange Rates API. The command should have the following signature:
 
     `php bin/console app:exchange-rates:fetch [base_currency] [target_currency_1] [target_currency_2] ... [target_currency_n]`
@@ -39,9 +41,9 @@ Requirements
     The command should make an HTTP request to the API to fetch the exchange rates for the given currencies, save the rates into a MySQL Database with the EUR base currency, and store the rates in Redis. This must be set as a cron job to be triggered daily at 1 am.
 
 *   Create an endpoint that will return the exchange rates for a given set of currencies. The endpoint should have the following signature:
-   
+
     `GET /api/exchange-rates?base_currency=[base_currency]&target_currencies=[target_currency_1,target_currency_2,...,target_currency_n]`
-   
+
     The endpoint should first check Redis for the requested rates. If the rates are not in Redis, it should fetch them from the MySQL Database, store them in Redis, and return the rates. If the rates are in Redis, it should return the rates directly from Redis.
 
 *   Write unit tests to verify the functionality of the console command and the endpoint.
@@ -85,7 +87,7 @@ Before getting started with the Symfony application, you need to have the follow
 
 4. Build the container images and start the services:
 
-    `docker-compose up -d`
+   `docker-compose up -d`
 
 5.  Get composer dependencies trough app container
 
@@ -116,7 +118,7 @@ In addition, the API allows users to query currency exchange rates for a given s
 Please note that the cron is configured in the following file:
 `docker/cron/crontab`
 
-### Fetching Exchange Rates Command
+### Fetching Exchange Rates
 
 To retrieve the latest exchange rates data from the third-party API, use the following command:
 
@@ -137,6 +139,7 @@ docker-compose exec app php bin/console app:exchange:rates EUR
 ```
 
 Please note that the application validates the currency arguments using the `src/Service/Validator/CurrencyValidator.php` service. This validation is also used in the public API endpoint to ensure that only valid currencies are accepted.
+
 
 ### Exchange Rates Endpoint
 The application is a currency exchange rate API solution that provides users with up-to-date exchange rates between various currencies. This uses the Doctrine component for database management and GuzzleHTTP for making HTTP requests to a third-party API. The API endpoint can be accessed via the following URL:
@@ -203,8 +206,7 @@ If an error occurs during the API request, the response will contain an error me
 | 404              | "Not Found"             | The requested resource was not found\.                     |
 | 500              | "Internal Server Error" | An error occurred while processing the request\.           |
 
-Testing
--------
+### Testing
 To execute the testing about the functionality you should to run the following command:
 
 ```shell

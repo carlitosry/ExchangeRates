@@ -46,7 +46,7 @@ class ApiController extends AbstractController
 
         if ($hasError) {
             return $this->json(
-                json_encode(['message' => $message]),
+                ['message' => $message],
                 Response::HTTP_BAD_REQUEST
             );
         }
@@ -56,8 +56,8 @@ class ApiController extends AbstractController
 
         if (!$calculatedRates) {
             return $this->json(
-                json_encode(['message' => "Unable to find provided base currency: $baseCurrency"]),
-                Response::HTTP_NO_CONTENT
+                ['message' => "Unable to find provided base currency: ".$baseCurrency],
+                Response::HTTP_BAD_REQUEST
             );
         }
 
